@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:student/Home/generateNewLesson.dart';
 import 'package:student/Home/homeWidget.dart';
-import 'package:student/class/class.dart';
 import 'package:student/loginReg/StudentLogin.dart';
-import 'package:student/loginReg/TeacherLogin.dart';
 import 'package:student/service/FirebaseService.dart';
 import 'package:student/studentAcountGenerator/studentAcountGenerator.dart';
 
@@ -16,144 +14,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  TextEditingController tchName = new TextEditingController();
-  TextEditingController subName = new TextEditingController();
-  TextEditingController tcAdminEmail = new TextEditingController();
   TextEditingController tcAdminPass = new TextEditingController();
   TextEditingController tcAdminName = new TextEditingController();
   GlobalKey<ScaffoldState> scaKey = new GlobalKey<ScaffoldState>();
-  Random rnd = new Random();
 
-  Future addNewClassToFirebase() async {
-    int randomNum = rnd.nextInt(999999);
-    FirebaseService()
-        .addNewClass(
-            teacherName: tchName.text,
-            subName: subName.text,
-            date: date,
-            time: time,
-            qrNumber: randomNum)
-        .then((st) {
-      if (st.code == "Done") {
-        print(st);
-        Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (c) => QRClass(
-              tName: tchName.text,
-              subName: subName.text,
-              date: date,
-              time: time,
-              qrNumber: randomNum,
-            ),
-          ),
-        );
-      } else {
-        print(st);
-        print("Error When add Data To FIrebase");
-      }
-    });
-  }
-
-  String time;
-  String date;
-  Future createNewCalss() async {
-    setClassDate();
-    if (tchName != null && subName != null) {
-      if (tchName.text.isNotEmpty && subName.text.isNotEmpty) {
-        addNewClassToFirebase();
-      } else {
-        print("Some Filed Is Empty");
-      }
-    }
-  }
-
-  setClassDate() {
-    DateTime dateTime = DateTime.now();
-    List spliteDate = dateTime.toString().split(" ");
-    date = spliteDate[0];
-    List timeDate = spliteDate[1].toString().split(".");
-    time = timeDate[0];
-    print(spliteDate);
-    print(date);
-    print(time);
-  }
-
-  Future createClassInfoDialog() async {
-    await showDialog(
-      context: context,
-      builder: (c) {
-        return StatefulBuilder(
-          builder: (c, setState2) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: AlertDialog(
-                title: Text(
-                  "انشاء محاضرة جديدة",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                shape: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CupertinoTextField(
-                      controller: tchName,
-                      padding: EdgeInsets.all(16),
-                      placeholder: "اسم الاستاذ",
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 7,
-                    ),
-                    CupertinoTextField(
-                      controller: subName,
-                      placeholder: "اسم المحاضرة",
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 7,
-                    ),
-                  ],
-                ),
-                actions: [
-                  FlatButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text("الغاء"),
-                  ),
-                  FlatButton(
-                    onPressed: () {
-                      createNewCalss();
-                    },
-                    child: Text("انشاء"),
-                  )
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+  TextEditingController tcAdminEmail = new TextEditingController();
   bool addNewAdmin = false;
 
   Future showAddNewAdmiDoalog() async {
@@ -258,21 +123,33 @@ class _HomeState extends State<Home> {
               teacherAdminName: tcAdminName.text,
               uid: user.uid)
           .then((s) {
-        addNewAdmin = false;
+        FirebaseAuth.instance.signOut().then((x) {
+          addNewAdmin = false;
+          scaKey.currentState.showSnackBar(
+            SnackBar(
+              content: Text("تم انشاء الحساب بنجاح"),
+            ),
+          );
+        });
         Navigator.of(context).pop();
-        scaKey.currentState.showSnackBar(
-          SnackBar(
-            content: Text("تم انشاء الحساب بنجاح"),
-          ),
-        );
       });
     } catch (e) {
       print(e.toString());
     }
   }
 
+  String userUid = '';
+  Widget homeWidget;
+  @override
+  void initState() {
+    super.initState();
+    userUid = FirebaseAuth.instance.currentUser.uid;
+    homeWidget = HomeWidget(
+      uid: userUid,
+    );
+  }
+
   int index = 0;
-  Widget homeWidget = HomeWidget();
 
   @override
   Widget build(BuildContext context) {
@@ -292,36 +169,58 @@ class _HomeState extends State<Home> {
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () async {
-              await FirebaseAuth.instance.signOut().then((e) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (c) => StudentLogin(),
-                  ),
-                  (Route<dynamic> route) => false,
-                );
-              });
+              showDialog(
+                  context: context,
+                  builder: (c) {
+                    return AlertDialog(
+                      title: Text("تسجيل الخروج"),
+                      content: Text("هل انت متاكد من تسجيل الخروج"),
+                      actions: [
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("الغاء"),
+                        ),
+                        FlatButton(
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut().then((e) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (c) => StudentLogin(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            });
+                          },
+                          child: Text("خروج"),
+                        )
+                      ],
+                    );
+                  });
             },
           ),
         ],
       ),
       body: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50),
-              topRight: Radius.circular(50),
-            ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(50),
+            topRight: Radius.circular(50),
           ),
-          alignment: Alignment.topCenter,
-          child: homeWidget),
+        ),
+        alignment: Alignment.topCenter,
+        child: homeWidget,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
         onTap: (int i) {
           setState(() {
             index = i;
             if (i == 0) {
-              homeWidget = HomeWidget();
+              homeWidget = HomeWidget(uid: userUid);
             } else if (i == 1) {
               homeWidget = StudentAcountGenerator();
             }
@@ -355,9 +254,27 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: createClassInfoDialog,
+      floatingActionButton: RaisedButton.icon(
+        label: Text(
+          "محاضرة جديدة",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        icon: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        elevation: 10,
+        color: Theme.of(context).primaryColor,
+        onPressed: () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (c) => GenerateNewLesson(),
+            ),
+          );
+        },
       ),
     );
   }

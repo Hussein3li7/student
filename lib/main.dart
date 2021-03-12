@@ -5,9 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:student/Home/Home.dart';
 import 'package:student/loginReg/StudentLogin.dart';
-import 'package:student/loginReg/TeacherLogin.dart';
 import 'package:student/service/FirebaseService.dart';
-import 'package:student/student/setStudentSingUp.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,36 +30,38 @@ class _MyAppState extends State<MyApp> {
   Widget homeWidget = StudentLogin();
   User user;
   getLoginState() async {
-    user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      Stream<QuerySnapshot> stream = await FirebaseService().getAdminEmail();
-      stream.forEach((e) {
-        for (var i in e.docs) {
-          if (user.uid.contains(i.id)) {
-            setState(() {
-              homeWidget = Home();
-            });
-            // Navigator.pushAndRemoveUntil(
-            //   context,
-            //   CupertinoPageRoute(
-            //     builder: (c) => Home(),
-            //   ),
-            //   (Route<dynamic> route) => false,
-            // );
-          } else {
-            setState(() {
-              homeWidget = StudentLogin();
-            });
-            // Navigator.pushAndRemoveUntil(
-            //   context,
-            //   CupertinoPageRoute(
-            //     builder: (c) => SetStudentSingUp(),
-            //   ),
-            //   (Route<dynamic> route) => false,
-            // );
+    if (FirebaseAuth.instance.currentUser != null) {
+      user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Stream<QuerySnapshot> stream = await FirebaseService().getAdminEmail();
+        stream.forEach((e) {
+          for (var i in e.docs) {
+            if (user.uid.contains(i.id)) {
+              setState(() {
+                homeWidget = Home();
+              });
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   CupertinoPageRoute(
+              //     builder: (c) => Home(),
+              //   ),
+              //   (Route<dynamic> route) => false,
+              // );
+            } else {
+              setState(() {
+                homeWidget = StudentLogin();
+              });
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   CupertinoPageRoute(
+              //     builder: (c) => SetStudentSingUp(),
+              //   ),
+              //   (Route<dynamic> route) => false,
+              // );
+            }
           }
-        }
-      });
+        });
+      }
     }
   }
 
@@ -71,6 +71,7 @@ class _MyAppState extends State<MyApp> {
         title: 'تسجيل الطلبة',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
+          fontFamily: 'OpenSans',
           scaffoldBackgroundColor: Color(0xff393776),
           primarySwatch: Colors.indigo,
           visualDensity: VisualDensity.adaptivePlatformDensity,

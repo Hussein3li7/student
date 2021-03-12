@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:student/loginReg/TeacherLogin.dart';
+import 'package:student/loginReg/StudentLogin.dart';
 import 'package:student/service/FirebaseService.dart';
 
 class SetStudentSingUp extends StatefulWidget {
@@ -44,7 +44,7 @@ class _SetStudentSingUpState extends State<SetStudentSingUp> {
       String time = timeDate2[0];
 
       User user = FirebaseAuth.instance.currentUser;
-      String studentName = user.displayName??"null";
+      String studentName = user.displayName ?? "null";
       FirebaseService()
           .addStudents(
               studentName: studentName ?? " ",
@@ -52,7 +52,7 @@ class _SetStudentSingUpState extends State<SetStudentSingUp> {
               date: timeDate[0] ?? date,
               time: time ?? " ",
               qrNumber: int.parse(qrNumber) ?? " ",
-              uid: user.uid ?? "null")
+              email: user.email ?? "null")
           .then((e) {
         if (e.message == "Done") {
           createClassInfoDialog(
@@ -124,15 +124,36 @@ class _SetStudentSingUpState extends State<SetStudentSingUp> {
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () async {
-              await FirebaseAuth.instance.signOut().then((s) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (c) => TeacherLogin(),
-                  ),
-                  (Route<dynamic> route) => false,
-                );
-              });
+              showDialog(
+                  context: context,
+                  builder: (c) {
+                    return AlertDialog(
+                      title: Text("تسجيل الخروج"),
+                      content: Text("هل انت متاكد من تسجيل الخروج"),
+                      actions: [
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("الغاء"),
+                        ),
+                        FlatButton(
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut().then((e) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (c) => StudentLogin(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            });
+                          },
+                          child: Text("خروج"),
+                        )
+                      ],
+                    );
+                  });
             },
           )
         ],

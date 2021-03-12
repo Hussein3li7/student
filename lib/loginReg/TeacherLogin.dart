@@ -9,7 +9,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:student/Home/Home.dart';
 import 'package:student/loginReg/StudentLogin.dart';
 import 'package:student/service/FirebaseService.dart';
-import 'package:student/student/setStudentSingUp.dart';
 
 class TeacherLogin extends StatefulWidget {
   @override
@@ -19,7 +18,7 @@ class TeacherLogin extends StatefulWidget {
 }
 
 class TeacherLoginUI extends State<TeacherLogin> {
-  GlobalKey showSnak = GlobalKey();
+  GlobalKey<ScaffoldState> showSnak = GlobalKey<ScaffoldState>();
 
   TextEditingController userEmail = TextEditingController();
   TextEditingController pass = TextEditingController();
@@ -49,14 +48,12 @@ class TeacherLoginUI extends State<TeacherLogin> {
               Center(
                 child: Text(
                   'استعادة كلمة المرور',
-                  style: TextStyle(fontFamily: 'Cairo'),
                 ),
               ),
               Center(
                 child: Text(
                   restEmailErrorCallPack,
-                  style: TextStyle(
-                      fontFamily: 'Cairo', fontSize: 13.0, color: Colors.red),
+                  style: TextStyle(fontSize: 13.0, color: Colors.red),
                 ),
               ),
             ],
@@ -68,7 +65,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                   padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 5.0),
                   child: TextField(
                     keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(fontFamily: 'Cairo'),
                     controller: resetEmailCtrl,
                     decoration: InputDecoration(
                       filled: true,
@@ -89,7 +85,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                         color: emailEmpty ? Colors.red : Color(0xff393776),
                       ),
                       prefixText: '',
-                      hintStyle: TextStyle(fontFamily: 'Cairo'),
                     ),
                   ),
                 ),
@@ -105,8 +100,7 @@ class TeacherLoginUI extends State<TeacherLogin> {
                     onPressed: resteEmail,
                     child: Text(
                       'استعادة',
-                      style:
-                          TextStyle(fontFamily: 'Cairo', color: Colors.white),
+                      style: TextStyle(color: Colors.white),
                     ),
                   )),
             )
@@ -120,27 +114,15 @@ class TeacherLoginUI extends State<TeacherLogin> {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: resetEmailCtrl.text.trim());
+      snakbar("تم ارسال رابط تغير كلمة المرور الى الايميل");
+
       Navigator.of(context).pop();
     } catch (e) {
-      if (e.toString().contains('ERROR_USER_NOT_FOUND')) {
-        setState(() {
-          restEmailErrorCallPack = 'الايميل غير موجود';
-        });
-      } else if (e.toString().contains('ERROR_INVALID_EMAIL')) {
-        setState(() {
-          restEmailErrorCallPack = 'الايميل غير صالح ';
-        });
-      } else if (e.toString().contains('ERROR_NETWORK_REQUEST_FAILED')) {
-        setState(() {
-          restEmailErrorCallPack = 'خطأ يرجى التأكد من خدمة الانترنت لديك';
-        });
-      } else {
-        setState(() {
-          restEmailErrorCallPack = 'خطأ يرجى المحاولة لاحقا';
-        });
-      }
+      snakbar("خطأ يرجى التاكد من الايميل او اتصالك بالشبكة");
     }
   }
+
+  List userUid = [];
 
   Future login(String email, String pass) async {
     try {
@@ -153,23 +135,24 @@ class TeacherLoginUI extends State<TeacherLogin> {
       Stream<QuerySnapshot> stream = await FirebaseService().getAdminEmail();
       await stream.forEach((e) {
         for (var i in e.docs) {
-          if (user.uid.contains(i.id)) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              CupertinoPageRoute(
-                builder: (c) => Home(),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          } else {
-            Navigator.pushAndRemoveUntil(
-              context,
-              CupertinoPageRoute(
-                builder: (c) => StudentLogin(),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          }
+          userUid.add(i.id);
+        }
+        if (userUid.contains(user.uid)) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(
+              builder: (c) => Home(),
+            ),
+            (Route<dynamic> route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(
+              builder: (c) => StudentLogin(),
+            ),
+            (Route<dynamic> route) => false,
+          );
         }
       });
 
@@ -180,37 +163,17 @@ class TeacherLoginUI extends State<TeacherLogin> {
       //    ),
       //   );
     } catch (e) {
-      if (e.toString().contains('ERROR_USER_NOT_FOUND')) {
-        setState(() {
-          userNotFound = true;
-          showLoginLoding = false;
-          wrongPass = false;
-          invalidEmail = false;
-          publicError = false;
-        });
-      } else if (e.toString().contains('ERROR_WRONG_PASSWORD')) {
-        setState(() {
-          wrongPass = true;
-          showLoginLoding = false;
-          invalidEmail = false;
-          userNotFound = false;
-          publicError = false;
-        });
-      } else if (e.toString().contains('ERROR_INVALID_EMAIL')) {
-        setState(() {
-          invalidEmail = true;
-          showLoginLoding = false;
-          wrongPass = false;
-          userNotFound = false;
-          publicError = false;
-        });
-      } else {
-        setState(() {
-          publicError = true;
-          showLoginLoding = false;
-        });
-      }
+      snakbar("خطأ يرجى التاكد من الايميل او اتصالك بالشبكة");
     }
+  }
+
+  snakbar(String msg) async {
+    showSnak.currentState.showSnackBar(SnackBar(
+      content: Text("$msg"),
+    ));
+    setState(() {
+      showLoginLoding = false;
+    });
   }
 
   bool showPass = true;
@@ -244,6 +207,7 @@ class TeacherLoginUI extends State<TeacherLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: showSnak,
       backgroundColor: Color(0xff393776),
       appBar: AppBar(
         title: Text(
@@ -281,9 +245,9 @@ class TeacherLoginUI extends State<TeacherLogin> {
                             'اهلا بعودتك ',
                             textDirection: TextDirection.rtl,
                             style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 25.0,
-                                fontFamily: 'Cairo'),
+                              color: Colors.black,
+                              fontSize: 25.0,
+                            ),
                           ),
                         ),
                         Container(
@@ -302,7 +266,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                     child: TextField(
                                       textDirection: TextDirection.ltr,
                                       keyboardType: TextInputType.emailAddress,
-                                      style: TextStyle(fontFamily: 'Cairo'),
                                       controller: userEmail,
                                       decoration: InputDecoration(
                                         filled: true,
@@ -336,8 +299,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                                 : userNotFound
                                                     ? 'الايميل غير موجود'
                                                     : null,
-                                        errorStyle:
-                                            TextStyle(fontFamily: 'Cairo'),
                                         hintText: 'الايميل',
                                         labelText: 'الايميل',
                                         labelStyle:
@@ -349,8 +310,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                               : Color(0xff393776),
                                         ),
                                         prefixText: '',
-                                        hintStyle:
-                                            TextStyle(fontFamily: 'Cairo'),
                                       ),
                                     ),
                                   ),
@@ -361,7 +320,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                     textDirection: TextDirection.rtl,
                                     child: TextField(
                                       textDirection: TextDirection.ltr,
-                                      style: TextStyle(fontFamily: 'Cairo'),
                                       controller: pass,
                                       obscureText: showPass,
                                       decoration: InputDecoration(
@@ -384,8 +342,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                             : wrongPass
                                                 ? 'الرمز السري خطأ'
                                                 : null,
-                                        errorStyle:
-                                            TextStyle(fontFamily: 'Cairo'),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(50.0),
@@ -419,8 +375,6 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                               : Color(0xff393776),
                                         ),
                                         prefixText: '',
-                                        hintStyle:
-                                            TextStyle(fontFamily: 'Cairo'),
                                       ),
                                     ),
                                   ),
@@ -434,9 +388,9 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                       child: Text(
                                         'هل نسيت كلمة المرور؟',
                                         style: TextStyle(
-                                            color: Colors.blue[900],
-                                            fontSize: 13.0,
-                                            fontFamily: 'Cairo'),
+                                          color: Colors.blue[900],
+                                          fontSize: 13.0,
+                                        ),
                                       ),
                                     )),
                                 Container(
@@ -469,9 +423,7 @@ class TeacherLoginUI extends State<TeacherLogin> {
                                       children: <Widget>[
                                         Text(
                                           !showLoginLoding ? 'تسجيل دخول' : '',
-                                          style: TextStyle(
-                                              fontFamily: 'Cairo',
-                                              fontSize: 17.0),
+                                          style: TextStyle(fontSize: 17.0),
                                         ),
                                         showLoginLoding
                                             ? showLoading(context)
@@ -515,7 +467,7 @@ class TeacherLoginUI extends State<TeacherLogin> {
                         //             'او الدخول بواسطة',
                         //             style: TextStyle(
                         //                 color: Colors.black54,
-                        //                 fontFamily: 'Cairo'),
+                        //                 ),
                         //           ),
                         //         ),
                         //       ),

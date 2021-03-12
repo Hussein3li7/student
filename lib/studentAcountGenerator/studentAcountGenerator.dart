@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:student/service/FirebaseService.dart';
 
+// ignore: must_be_immutable
 class StudentAcountGenerator extends StatefulWidget {
   StudentAcountGenerator({Key key}) : super(key: key);
   BuildContext context;
@@ -16,6 +19,7 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
   TextEditingController stName = TextEditingController();
   TextEditingController stEmail = TextEditingController();
   TextEditingController stPass = TextEditingController();
+  TextEditingController stStage = TextEditingController();
   bool loading = false, textFieldEmpty = false;
   GlobalKey<ScaffoldState> scaKey;
   String _chars =
@@ -32,6 +36,62 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
           ),
         ),
       );
+  String stageValue, stageType;
+  List<String> stageList = ["1", "2", "3", "4"];
+  List<String> stageTypeList = ["صباحي", "مسائي"];
+  Widget dropDownStageWidget() {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: DropdownButton(
+        value: stageValue,
+        hint: Text(
+          'المرحلة',
+        ),
+        underline: Container(
+          height: 2,
+          color: Colors.deepPurpleAccent,
+        ),
+        onChanged: (value) {
+          setState(() {
+            stageValue = value;
+          });
+        },
+        items: stageList.map<DropdownMenuItem<String>>((val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Text("المرحلة $val"),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget dropDownTypeWidget() {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: DropdownButton(
+        value: stageType,
+        hint: Text(
+          'الدراسة',
+        ),
+        underline: Container(
+          height: 2,
+          color: Colors.deepPurpleAccent,
+        ),
+        onChanged: (value) {
+          setState(() {
+            stageType = value;
+          });
+        },
+        items: stageTypeList.map<DropdownMenuItem<String>>((val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Text("$val"),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
   String createRandomEmail() {
     stEmail.text = "${getRandomString(10, _chars)}@uodiyala.edu.iq";
@@ -46,7 +106,9 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
     if (stEmail != null && stPass != null && stName != null) {
       if (stEmail.text.isNotEmpty &&
           stPass.text.isNotEmpty &&
-          stName.text.isNotEmpty) {
+          stName.text.isNotEmpty &&
+          stageType.isNotEmpty &&
+          stageValue.isNotEmpty) {
         setState(() {
           loading = true;
           textFieldEmpty = false;
@@ -56,19 +118,37 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
               .createUserWithEmailAndPassword(
                   email: stEmail.text, password: stPass.text);
           User user = userCredential.user;
-          user.updateProfile(displayName: stName.text).then((u) {
-            FirebaseAuth.instance.signOut().then((e) async {
-              setState(() {
-                loading = false;
-              });
-              stEmail.clear();
-              stPass.clear();
-              stName.clear();
-              Scaffold.of(context).showSnackBar(SnackBar(
-                content: Text("تم انشاء الحساب بنجاح"),
-                backgroundColor: Colors.green.shade600,
-                duration: Duration(minutes: 10),
-              ));
+          user.updateProfile(displayName: stName.text).then((u) async {
+            await FirebaseService()
+                .upluadStudent(
+              email: stEmail.text,
+              stdName: stName.text,
+              stage: stageValue,
+              stdtype: stageType,
+              pass: stPass.text,
+            )
+                .then((x) {
+              if (x == "Done") {
+                FirebaseAuth.instance.signOut().then((e) async {
+                  setState(() {
+                    loading = false;
+                  });
+                  stEmail.clear();
+                  stPass.clear();
+                  stName.clear();
+                  SnackBar(
+                    content: Text("تم انشاء الحساب بنجاح"),
+                    backgroundColor: Colors.green.shade500,
+                    duration: Duration(minutes: 10),
+                  );
+                });
+              } else {
+                SnackBar(
+                  content: Text("حدث خطأ ما يرجى المحاولة لاحقا"),
+                  backgroundColor: Colors.red,
+                  duration: Duration(minutes: 10),
+                );
+              }
             });
           });
         } on FirebaseAuthException catch (e) {
@@ -85,7 +165,6 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaKey,
       appBar: AppBar(
         title: Text("انشاء حساب الطلاب"),
       ),
@@ -105,6 +184,13 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    dropDownStageWidget(),
+                    dropDownTypeWidget(),
+                  ],
+                ),
                 textFieldEmpty
                     ? Text(
                         "بعض الحقول فارغة",
@@ -119,6 +205,7 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
                 ),
                 CupertinoTextField(
                   controller: stName,
+                  keyboardType: TextInputType.text,
                   padding: EdgeInsets.all(16),
                   placeholder: "اسم الطالب",
                   decoration: BoxDecoration(
@@ -133,6 +220,7 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
                 ),
                 TextField(
                   controller: stEmail,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     prefixIcon: IconButton(
                       onPressed: createRandomEmail,
@@ -150,6 +238,7 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
                 ),
                 TextField(
                   controller: stPass,
+                  keyboardType: TextInputType.visiblePassword,
                   decoration: InputDecoration(
                     prefixIcon: IconButton(
                       onPressed: createRandomPass,

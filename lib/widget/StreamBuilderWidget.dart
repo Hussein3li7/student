@@ -4,9 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:student/studentDetails/studentDetails.dart';
 
 // ignore: must_be_immutable
-class StreamBuilderWidget extends StatelessWidget {
+class StreamBuilderWidget extends StatefulWidget {
   Stream<QuerySnapshot> stream;
-  StreamBuilderWidget({this.stream});
+  String stage, date, qrCode;
+  StreamBuilderWidget({this.stream, this.stage, this.date, this.qrCode});
+
+  @override
+  _StreamBuilderWidgetState createState() => _StreamBuilderWidgetState();
+}
+
+class _StreamBuilderWidgetState extends State<StreamBuilderWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -14,7 +21,7 @@ class StreamBuilderWidget extends StatelessWidget {
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: StreamBuilder(
-          stream: stream,
+          stream: widget.stream,
           builder: (BuildContext c, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
@@ -38,6 +45,8 @@ class StreamBuilderWidget extends StatelessWidget {
                             qrNumber: e["qrNumber"],
                             subName: e["SubName"],
                             time: e["time"],
+                            stage: widget.stage,
+                            type: e["type"],
                           ),
                         ),
                       );
@@ -61,6 +70,7 @@ class StreamBuilderWidget extends StatelessWidget {
                           children: [
                             Text(e["teacherName"]),
                             Text(e["date"]),
+                            Text(e["type"]),
                           ],
                         ),
                       ),

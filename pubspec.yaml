@@ -36,6 +36,17 @@ dependencies:
   firebase_auth: ^0.18.1+2
   shared_preferences: ^0.5.12+2
   flutter_login: ^1.0.14
+  pdf: ^2.0.0
+  horizontal_data_table: ^2.1.1+1
+  printing: ^4.0.0
+  image: ^2.1.19
+  path_provider: ^1.6.27
+  flutter_full_pdf_viewer: ^1.0.6 
+  image_gallery_saver: ^1.6.6
+  native_pdf_view: ^3.9.0 
+  excel: ^1.1.5
+  file_picker: ^1.11.0+3
+  share: ^0.6.5+4
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -66,10 +77,13 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: OpenSans
+      fonts:
+        - asset: fonts/OpenSans.ttf
+    - family: Hacen
+      fonts:
+        - asset: fonts/HacenTunisia.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

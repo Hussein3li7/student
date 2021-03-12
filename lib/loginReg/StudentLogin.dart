@@ -19,7 +19,7 @@ class StudentLogin extends StatefulWidget {
 }
 
 class StudentLoginUI extends State<StudentLogin> {
-  GlobalKey showSnak = GlobalKey();
+  GlobalKey<ScaffoldState> showSnak = GlobalKey<ScaffoldState>();
 
   TextEditingController userEmail = TextEditingController();
   TextEditingController pass = TextEditingController();
@@ -120,25 +120,11 @@ class StudentLoginUI extends State<StudentLogin> {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: resetEmailCtrl.text.trim());
+      snakbar("تم ارسال رابط تغير كلمة المرور الى الايميل");
+
       Navigator.of(context).pop();
     } catch (e) {
-      if (e.toString().contains('ERROR_USER_NOT_FOUND')) {
-        setState(() {
-          restEmailErrorCallPack = 'الايميل غير موجود';
-        });
-      } else if (e.toString().contains('ERROR_INVALID_EMAIL')) {
-        setState(() {
-          restEmailErrorCallPack = 'الايميل غير صالح ';
-        });
-      } else if (e.toString().contains('ERROR_NETWORK_REQUEST_FAILED')) {
-        setState(() {
-          restEmailErrorCallPack = 'خطأ يرجى التأكد من خدمة الانترنت لديك';
-        });
-      } else {
-        setState(() {
-          restEmailErrorCallPack = 'خطأ يرجى المحاولة لاحقا';
-        });
-      }
+      snakbar("خطأ يرجى التاكد من الايميل او اتصالك بالشبكة");
     }
   }
 
@@ -174,36 +160,7 @@ class StudentLoginUI extends State<StudentLogin> {
         }
       });
     } catch (e) {
-      if (e.toString().contains('ERROR_USER_NOT_FOUND')) {
-        setState(() {
-          userNotFound = true;
-          showLoginLoding = false;
-          wrongPass = false;
-          invalidEmail = false;
-          publicError = false;
-        });
-      } else if (e.toString().contains('ERROR_WRONG_PASSWORD')) {
-        setState(() {
-          wrongPass = true;
-          showLoginLoding = false;
-          invalidEmail = false;
-          userNotFound = false;
-          publicError = false;
-        });
-      } else if (e.toString().contains('ERROR_INVALID_EMAIL')) {
-        setState(() {
-          invalidEmail = true;
-          showLoginLoding = false;
-          wrongPass = false;
-          userNotFound = false;
-          publicError = false;
-        });
-      } else {
-        setState(() {
-          publicError = true;
-          showLoginLoding = false;
-        });
-      }
+      snakbar("خطأ يرجى التاكد من الايميل او اتصالك بالشبكة");
     }
   }
 
@@ -212,6 +169,15 @@ class StudentLoginUI extends State<StudentLogin> {
   enableShowPass() {
     setState(() {
       showPass = !showPass;
+    });
+  }
+
+  snakbar(String msg) async {
+    showSnak.currentState.showSnackBar(SnackBar(
+      content: Text("$msg"),
+    ));
+    setState(() {
+      showLoginLoding = false;
     });
   }
 
@@ -238,6 +204,7 @@ class StudentLoginUI extends State<StudentLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: showSnak,
       backgroundColor: Color(0xff393776),
       appBar: AppBar(
         title: Text(
