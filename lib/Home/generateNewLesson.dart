@@ -83,6 +83,7 @@ class _GenerateNewLessonState extends State<GenerateNewLesson> {
     date = spliteDate[0];
     List timeDate = spliteDate[1].toString().split(".");
     time = timeDate[0];
+    print(dateTime);
   }
 
   String stageValue;

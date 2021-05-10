@@ -40,11 +40,8 @@ class PdfRender extends StatelessWidget {
 
   Future savePdf() async {
     Directory documentDirectory = await getApplicationDocumentsDirectory();
-
     String documentPath = documentDirectory.path;
-
     File file = File("$documentPath/example.pdf");
-
     file.writeAsBytesSync(await pdf.save());
   }
 

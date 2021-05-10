@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:student/pdfRunder/pdfPerview.dart';
+import 'package:student/studentDetails/showStordClassQuCode.dart';
 import 'package:student/widget/studentStreamWidget.dart';
 
 // ignore: must_be_immutable
@@ -39,6 +41,8 @@ class _StudentDetailsState extends State<StudentDetails> {
 
   Future getStoredStd() async {
     print("okokok");
+    print(widget.date);
+    print(widget.qrNumber);
     FirebaseFirestore.instance
         .collection("storedStudents")
         .doc(widget.date)
@@ -58,12 +62,74 @@ class _StudentDetailsState extends State<StudentDetails> {
 
   final pdf = pw.Document();
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+/////////////////////////////Save exeil File/////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+  saveExcelFile() {
+    Excel excel = Excel.createExcel();
+
+    excel.encode().then((onValue) {
+      File("Path_to_destination/excel.xlsx")
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(onValue);
+    });
+  }
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+/////////////////////////////Save exeil File/////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("التفاصيل"),
+        title: Text(" ${widget.subName} "),
         centerTitle: true,
+        actions: [
+          IconButton(
+              icon: Icon(Icons.qr_code),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (c) => ShowStoredClassQrCode(
+                      tName: widget.teacherName,
+                      subName: widget.subName,
+                      date: widget.date,
+                      time: widget.time,
+                      qrNumber: widget.qrNumber,
+                    ),
+                  ),
+                );
+              }),
+        ],
       ),
       // body: TableWidget(
       //   title: "Table",
@@ -94,62 +160,87 @@ class _StudentDetailsState extends State<StudentDetails> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.print),
         onPressed: () async {
-          Map<String, Map> std = {};
-          FirebaseFirestore.instance
-              .collection("allStudents")
-              .doc(widget.stage)
-              .collection("${widget.type}")
-              .snapshots()
-              .listen(
-            (e) async {
-              for (var i in e.docs) {
-                if (uid.contains(i["stdEmail"])) {
-                  print(
-                      "${uid.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[uid.indexOf(i['stdEmail'])]} ");
-                  std.addAll({
-                    i.id: i.data()
-                      ..addAll({"state": '1'})
-                      ..addAll({'mark': markes[uid.indexOf(i['stdEmail'])]}),
-                  });
-                } else {
-                  std.addAll({
-                    i.id: i.data()
-                      ..addAll({"state": '0'})
-                      ..addAll({'mark': '0'}),
-                  });
-                }
-              }
-              // print(uid);
-              //   print(std);
-
-              writeOnPdf(
-                  teacherName: widget.teacherName,
-                  date: widget.date,
-                  subName: widget.subName,
-                  stream: std);
-              await savePdf();
-              Directory documentDirectory =
-                  await getApplicationDocumentsDirectory();
-
-              String documentPath = documentDirectory.path;
-
-              String fullPath =
-                  "$documentPath/${widget.date}+${widget.teacherName}+${widget.subName}.pdf";
-
-              Navigator.push(
-                context,
-                CupertinoPageRoute(
-                  builder: (context) => PdfPreviewScreen(
-                    path: fullPath,
-                  ),
-                ),
-              );
-            },
+          Excel excel = await Excel.createExcel();
+          excel.updateCell(
+            'Sheet1',
+            CellIndex.indexByString("A2"),
+            "Here value",
+            cellStyle: CellStyle(
+                backgroundColorHex: "#1AFF1A",
+                horizontalAlign: HorizontalAlign.Right),
           );
+
+          // excel.appendRow("Sheet1", ["Name", "state", "email", "mark"]);
+
+          for (var table in excel.tables.keys) {
+            print(table); //sheet Name
+            print(excel.tables[table].maxCols);
+            print(excel.tables[table].maxRows);
+            for (var row in excel.tables[table].rows) {
+              print("$row");
+            }
+          }
         },
-        child: Icon(Icons.save),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     Map<String, Map> std = {};
+      //     await FirebaseFirestore.instance
+      //         .collection("allStudents")
+      //         .doc(widget.stage)
+      //         .collection("${widget.type}")
+      //         .snapshots()
+      //         .listen(
+      //       (e) async {
+      //         for (var i in e.docs) {
+      //           if (uid.contains(i["stdEmail"])) {
+      //             print(
+      //                 "${uid.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[uid.indexOf(i['stdEmail'])]} ");
+      //             std.addAll({
+      //               i.id: i.data()
+      //                 ..addAll({"state": '1'})
+      //                 ..addAll({'mark': markes[uid.indexOf(i['stdEmail'])]}),
+      //             });
+      //           } else {
+      //             std.addAll({
+      //               i.id: i.data()
+      //                 ..addAll({"state": '0'})
+      //                 ..addAll({'mark': '0'}),
+      //             });
+      //           }
+      //         }
+      //         // print(uid);
+      //         //   print(std);
+
+      //         await writeOnPdf(
+      //             teacherName: widget.teacherName,
+      //             date: widget.date,
+      //             subName: widget.subName,
+      //             stream: std);
+      //         await savePdf();
+      //         Directory documentDirectory =
+      //             await getApplicationDocumentsDirectory();
+
+      //         String documentPath = documentDirectory.path;
+
+      //         String fullPath =
+      //             "$documentPath/${widget.date}+${widget.teacherName}+${widget.subName}.pdf";
+
+      //         await Navigator.push(
+      //           context,
+      //           CupertinoPageRoute(
+      //             builder: (context) => PdfPreviewScreen(
+      //               path: fullPath,
+      //             ),
+      //           ),
+      //         );
+      //       },
+      //     );
+      //   },
+      //   child: Icon(Icons.save),
+      // ),
     );
   }
 

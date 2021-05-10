@@ -138,12 +138,13 @@ class _HomeState extends State<Home> {
     }
   }
 
-  String userUid = '';
+  String userUid = '', email = '';
   Widget homeWidget;
   @override
   void initState() {
     super.initState();
     userUid = FirebaseAuth.instance.currentUser.uid;
+    email = FirebaseAuth.instance.currentUser.email;
     homeWidget = HomeWidget(
       uid: userUid,
     );
@@ -160,12 +161,12 @@ class _HomeState extends State<Home> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(
+         email=="a@a.com"? IconButton(
             icon: Icon(Icons.add),
             onPressed: () async {
               await showAddNewAdmiDoalog();
             },
-          ),
+          ):Container(),
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () async {

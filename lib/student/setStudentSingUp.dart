@@ -38,7 +38,7 @@ class _SetStudentSingUpState extends State<SetStudentSingUp> {
       String date = l[2];
       String qrNumber = l[4];
 
-      DateTime dateTime = DateTime.now().toUtc();
+      DateTime dateTime = DateTime.now();
       List timeDate = dateTime.toString().split(" ");
       List timeDate2 = timeDate[1].toString().split(".");
       String time = timeDate2[0];

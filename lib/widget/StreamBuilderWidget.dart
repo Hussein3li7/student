@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:student/studentDetails/studentDetails.dart';
+import 'package:student/studentDetails/studentDetailsWithExcel.dart';
 
 // ignore: must_be_immutable
 class StreamBuilderWidget extends StatefulWidget {
@@ -31,7 +32,11 @@ class _StreamBuilderWidgetState extends State<StreamBuilderWidget> {
               return Center(
                 child: Text("No Date"),
               );
-            } else {
+            } else if (!snapshot.hasData) {
+              return Center(
+                child: Text("No Date"),
+              );
+            } else { 
               return Column(
                 children: snapshot.data.docs.map((e) {
                   return GestureDetector(
@@ -39,7 +44,7 @@ class _StreamBuilderWidgetState extends State<StreamBuilderWidget> {
                       await Navigator.push(
                         context,
                         CupertinoPageRoute(
-                          builder: (c) => StudentDetails(
+                          builder: (c) => StudentDetailsWithExcel(
                             teacherName: e["teacherName"],
                             date: e["date"],
                             qrNumber: e["qrNumber"],
