@@ -169,21 +169,20 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
           std.addAll({
             //state =1 is mean student is present in class , state =0 mean student is absent
             i.id: i.data()
-              ..addAll({"state": '1'})
+              ..addAll({"state": 'حاضر'})
               ..addAll({'mark': markes[uid.indexOf(i['stdEmail'])]}),
           });
         } else {
           std.addAll({
-            i.id: i.data()..addAll({"state": '0'})..addAll({'mark': '0'}),
+            i.id: i.data()..addAll({"state": 'غائب'})..addAll({'mark': '0'}),
           });
         }
       }
-      print(std);
       for (var i = 0; i < std.values.length; i++) {
-        print(std.values.toList()[i].values.toList());
-          
+        //  print(std.values.toList()[i].values.toList());
         excel.appendRow("$sheetName", std.values.toList()[i].values.toList());
       }
+
       std.clear();
       // create title of data for excel file List Std name and Email and State
 
@@ -195,8 +194,6 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
           ..writeAsBytesSync(onValue);
       }).then((value) {
         ImageGallerySaver.saveFile(excelFile.path).then((xx) async {
-          print("saved ");
-          print(xx["filePath"]);
           setSnakbar(xx["filePath"]);
           //excel.delete(sheetName);
 
