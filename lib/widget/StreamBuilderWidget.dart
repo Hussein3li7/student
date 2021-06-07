@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:student/studentDetails/studentDetails.dart';
 import 'package:student/studentDetails/studentDetailsWithExcel.dart';
 
 // ignore: must_be_immutable
@@ -24,23 +23,16 @@ class _StreamBuilderWidgetState extends State<StreamBuilderWidget> {
         child: StreamBuilder(
           stream: widget.stream,
           builder: (BuildContext c, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (snapshot.connectionState == ConnectionState.none) {
+            if (!snapshot.hasData) {
               return Center(
                 child: Text("No Date"),
               );
-            } else if (!snapshot.hasData) {
-              return Center(
-                child: Text("No Date"),
-              );
-            } else { 
+            } else {
               return Column(
                 children: snapshot.data.docs.map((e) {
                   return GestureDetector(
                     onTap: () async {
+                      print(DateTime.now());
                       await Navigator.push(
                         context,
                         CupertinoPageRoute(

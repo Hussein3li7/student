@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:student/studentDetails/showStordClassQuCode.dart';
 import 'package:student/widget/studentStreamWidget.dart';
 
@@ -37,13 +38,10 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
   }
 
   String sheetName = "Sheet1";
-  List uid = [], markes = [];
+  List stdEmail = [], markes = [];
   bool loading = true;
-
+  Map<String, Map> std = {};
   Future getStoredStd() async {
-    print("okokok");
-    print(widget.date);
-    print(widget.qrNumber);
     FirebaseFirestore.instance
         .collection("storedStudents")
         .doc(widget.date)
@@ -51,9 +49,8 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
         .snapshots()
         .listen((s) {
       s.docs.forEach((x) {
-        print(x['stdEmail']);
         setState(() {
-          uid.add(x['stdEmail']);
+          stdEmail.add(x['stdEmail']);
           markes.add(x['mark']);
           loading = false;
         });
@@ -86,7 +83,9 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
       action: SnackBarAction(
         label: "تم",
         textColor: Colors.white,
-        onPressed: () {},
+        onPressed: () async {
+          // await OpenFile.open(excelfilePath);
+        },
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -97,7 +96,7 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("A1"),
-      "Email",
+      "Student Name",
       cellStyle: CellStyle(
           backgroundColorHex: "#1AFF1A",
           bold: true,
@@ -106,16 +105,17 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("B1"),
-      "Name",
+      "Student Email",
       cellStyle: CellStyle(
           backgroundColorHex: "#1AFF1A",
           bold: true,
           horizontalAlign: HorizontalAlign.Center),
     );
+
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("C1"),
-      "pass",
+      "Stady Type",
       cellStyle: CellStyle(
           backgroundColorHex: "#1AFF1A",
           bold: true,
@@ -124,7 +124,7 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("D1"),
-      "Type",
+      "Stage",
       cellStyle: CellStyle(
           backgroundColorHex: "#1AFF1A",
           bold: true,
@@ -133,28 +133,56 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("E1"),
-      "State",
+      "Student State",
       cellStyle: CellStyle(
           backgroundColorHex: "#1AFF1A",
           bold: true,
           horizontalAlign: HorizontalAlign.Center),
     );
+
     excel.updateCell(
       '$sheetName',
       CellIndex.indexByString("F1"),
       "Additional Mark",
       cellStyle: CellStyle(
-          backgroundColorHex: "#1AFF1A",
-          bold: true,
-          horizontalAlign: HorizontalAlign.Center),
+        backgroundColorHex: "#1AFF1A",
+        bold: true,
+        horizontalAlign: HorizontalAlign.Center,
+      ),
     );
   }
 
+  Future permitionStatus() async {
+    var state = Permission.storage.status;
+    state.then((perState) async {
+      if (perState.isGranted) {
+        return saveExcelFile();
+      } else if (perState.isUndetermined) {
+        await Permission.storage.request().then((perState) {
+          if (perState.isGranted) {
+            return saveExcelFile();
+          } else {
+            return perState;
+          }
+        });
+        return perState;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "تم رفض اذن الوصول الى الملفات ",
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+  }
+
   saveExcelFile() async {
-    Map<String, Map> std = {};
-
     setSheetStyle();
-
+    this.std.clear();
+    this.excel.delete(sheetName);
     var dir = await getApplicationDocumentsDirectory();
     await FirebaseFirestore.instance
         .collection("allStudents")
@@ -163,18 +191,37 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
         .snapshots()
         .listen((e) async {
       for (var i in e.docs) {
-        if (uid.contains(i["stdEmail"])) {
+        print(i.data());
+        if (stdEmail.contains(i["stdEmail"])) {
           print(
-              "${uid.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[uid.indexOf(i['stdEmail'])]} ");
+              "${stdEmail.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[stdEmail.indexOf(i['stdEmail'])]} ");
+          i.data()..remove("pass")..remove("admin");
           std.addAll({
             //state =1 is mean student is present in class , state =0 mean student is absent
-            i.id: i.data()
-              ..addAll({"state": 'حاضر'})
-              ..addAll({'mark': markes[uid.indexOf(i['stdEmail'])]}),
+            i.id: {
+              'stdName': i.data()['stdName'],
+              'stdEmail': i.data()['stdEmail'],
+              'stdtype': i.data()['stdtype'],
+              'stage': i.data()['stage'],
+              'state': 'حاضر',
+              'mark': markes[stdEmail.indexOf(i['stdEmail'])]
+            },
+            // i.id: i.data()
+            //   ..addAll({"state": 'حاضر'})
+            //   ..addAll({'mark': markes[stdEmail.indexOf(i['stdEmail'])]}),
           });
         } else {
           std.addAll({
-            i.id: i.data()..addAll({"state": 'غائب'})..addAll({'mark': '0'}),
+            i.id: {
+              'stdName': i.data()['stdName'],
+              'stdEmail': i.data()['stdEmail'],
+              'stdtype': i.data()['stdtype'],
+              'stage': i.data()['stage'],
+              'state': 'غائب',
+              'mark': "0"
+            },
+
+            // i.id: i.data()..addAll({"state": 'غائب'})..addAll({'mark': '0'}),
           });
         }
       }
@@ -183,7 +230,6 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
         excel.appendRow("$sheetName", std.values.toList()[i].values.toList());
       }
 
-      std.clear();
       // create title of data for excel file List Std name and Email and State
 
       ////////////////
@@ -193,10 +239,13 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
           ..createSync(recursive: true)
           ..writeAsBytesSync(onValue);
       }).then((value) {
+        print(excelFile);
         ImageGallerySaver.saveFile(excelFile.path).then((xx) async {
-          setSnakbar(xx["filePath"]);
+          print(xx);
+          if (xx['isSuccess'] == true) {
+            setSnakbar(xx["filePath"]);
+          }
           //excel.delete(sheetName);
-
           //  await OpenFile.open(excelFile.path);
         });
       });
@@ -249,6 +298,8 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
                       date: widget.date,
                       time: widget.time,
                       qrNumber: widget.qrNumber,
+                      stage: int.parse(widget.stage),
+                      stageType: widget.type,
                     ),
                   ),
                 );
@@ -274,7 +325,7 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
                   child: CircularProgressIndicator(),
                 )
               : StudentStreamWidget(
-                  emails: uid,
+                  emails: stdEmail,
                   stream: FirebaseFirestore.instance
                       .collection("allStudents")
                       .doc(widget.stage)
@@ -285,7 +336,7 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.print),
-        onPressed: saveExcelFile,
+        onPressed: permitionStatus,
       ),
       // floatingActionButton: FloatingActionButton(
       //   onPressed: () async {
@@ -298,13 +349,13 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
       //         .listen(
       //       (e) async {
       //         for (var i in e.docs) {
-      //           if (uid.contains(i["stdEmail"])) {
+      //           if (stdEmail.contains(i["stdEmail"])) {
       //             print(
-      //                 "${uid.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[uid.indexOf(i['stdEmail'])]} ");
+      //                 "${stdEmail.indexOf(i['stdEmail'])}=>${i['stdEmail']}=> ${markes[stdEmail.indexOf(i['stdEmail'])]} ");
       //             std.addAll({
       //               i.id: i.data()
       //                 ..addAll({"state": '1'})
-      //                 ..addAll({'mark': markes[uid.indexOf(i['stdEmail'])]}),
+      //                 ..addAll({'mark': markes[stdEmail.indexOf(i['stdEmail'])]}),
       //             });
       //           } else {
       //             std.addAll({
@@ -314,7 +365,7 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
       //             });
       //           }
       //         }
-      //         // print(uid);
+      //         // print(stdEmail);
       //         //   print(std);
 
       //         await writeOnPdf(

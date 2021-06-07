@@ -5,10 +5,10 @@ import 'package:student/widget/setNewStudentStreamWidget.dart';
 
 // ignore: must_be_immutable
 class ShowStoredClassQrCode extends StatefulWidget {
-  String tName, subName, date, time;
-  int qrNumber;
+  String tName, subName, date, time,stageType;
+  int qrNumber,stage;
   ShowStoredClassQrCode(
-      {this.subName, this.tName, this.date, this.time, this.qrNumber});
+      {this.subName, this.tName, this.date, this.time, this.qrNumber,this.stage,this.stageType});
   @override
   _ShowStoredClassQrCodeState createState() => _ShowStoredClassQrCodeState();
 }
@@ -38,7 +38,7 @@ class _ShowStoredClassQrCodeState extends State<ShowStoredClassQrCode> {
                   alignment: Alignment.center,
                   child: QrImage(
                     data:
-                        "${widget.tName}#${widget.subName}#${widget.date}#${widget.time}#${widget.qrNumber.toString()}",
+                        "${widget.tName}#${widget.subName}#${widget.date}#${widget.time}#${widget.qrNumber.toString()}#${widget.stage}#${widget.stageType}",
                     errorStateBuilder: (c, o) {
                       return Text("Errror $o");
                     },

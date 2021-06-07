@@ -47,6 +47,8 @@ class _GenerateNewLessonState extends State<GenerateNewLesson> {
                 date: date,
                 time: time,
                 qrNumber: randomNum,
+                stage: int.parse(stageValue),
+                stageType: stageType,
               ),
             ),
           );

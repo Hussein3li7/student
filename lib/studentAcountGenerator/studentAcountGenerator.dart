@@ -136,18 +136,18 @@ class _StudentAcountGeneratorState extends State<StudentAcountGenerator> {
                   stEmail.clear();
                   stPass.clear();
                   stName.clear();
-                  SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text("تم انشاء الحساب بنجاح"),
                     backgroundColor: Colors.green.shade500,
-                    duration: Duration(minutes: 10),
-                  );
+                    duration: Duration(seconds: 5),
+                  ));
                 });
               } else {
-                SnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text("حدث خطأ ما يرجى المحاولة لاحقا"),
                   backgroundColor: Colors.red,
-                  duration: Duration(minutes: 10),
-                );
+                  duration: Duration(seconds: 5),
+                ));
               }
             });
           });

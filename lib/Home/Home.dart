@@ -119,9 +119,10 @@ class _HomeState extends State<Home> {
       await user.updateProfile(displayName: tcAdminPass.text);
       await FirebaseService()
           .addTeacherAdminEmail(
-              email: tcAdminEmail.text,
-              teacherAdminName: tcAdminName.text,
-              uid: user.uid)
+        email: tcAdminEmail.text,
+        teacherAdminName: tcAdminName.text,
+        uid: user.uid,
+      )
           .then((s) {
         FirebaseAuth.instance.signOut().then((x) {
           addNewAdmin = false;
@@ -161,12 +162,14 @@ class _HomeState extends State<Home> {
         centerTitle: true,
         elevation: 0,
         actions: [
-         email=="a@a.com"? IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () async {
-              await showAddNewAdmiDoalog();
-            },
-          ):Container(),
+          email == "a@a.com"
+              ? IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () async {
+                    await showAddNewAdmiDoalog();
+                  },
+                )
+              : Container(),
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () async {

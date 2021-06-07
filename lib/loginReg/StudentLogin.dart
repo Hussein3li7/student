@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:student/loginReg/Register.dart';
 import 'package:student/loginReg/TeacherLogin.dart';
 import 'package:student/service/FirebaseService.dart';
 import 'package:student/student/setStudentSingUp.dart';
@@ -128,6 +127,8 @@ class StudentLoginUI extends State<StudentLogin> {
     }
   }
 
+  List userUid = [];
+
   Future login(String email, String pass) async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
@@ -139,25 +140,29 @@ class StudentLoginUI extends State<StudentLogin> {
       Stream<QuerySnapshot> stream = await FirebaseService().getAdminEmail();
       await stream.forEach((e) async {
         for (var i in e.docs) {
-          if (user.uid != i.id) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              CupertinoPageRoute(
-                builder: (c) => SetStudentSingUp(),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          } else {
-            await FirebaseAuth.instance.signOut();
-            Navigator.pushAndRemoveUntil(
-              context,
-              CupertinoPageRoute(
-                builder: (c) => StudentLogin(),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          }
+          userUid.add(i.id);
         }
+        if (!userUid.contains(user.uid)) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(
+              builder: (c) => SetStudentSingUp(),
+            ),
+            (Route<dynamic> route) => false,
+          );
+        } else {
+          await FirebaseAuth.instance.signOut();
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(
+              builder: (c) => StudentLogin(),
+            ),
+            (Route<dynamic> route) => false,
+          );
+        }
+        //   for (var i in e.docs) {
+
+        //   }
       });
     } catch (e) {
       snakbar("خطأ يرجى التاكد من الايميل او اتصالك بالشبكة");

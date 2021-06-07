@@ -5,9 +5,9 @@ import 'package:student/widget/setNewStudentStreamWidget.dart';
 
 // ignore: must_be_immutable
 class QRClass extends StatefulWidget {
-  String tName, subName, date, time;
-  int qrNumber;
-  QRClass({this.subName, this.tName, this.date, this.time, this.qrNumber});
+  String tName, subName, date, time,stageType;
+  int qrNumber,stage;
+  QRClass({this.subName, this.tName, this.date, this.time, this.qrNumber,this.stage,this.stageType});
   @override
   _QRClassState createState() => _QRClassState();
 }
@@ -20,6 +20,7 @@ class _QRClassState extends State<QRClass> {
         child: CustomScrollView(
           slivers: <Widget>[
             SliverAppBar(
+              title: Text(widget.subName),
               elevation: 0.0,
               centerTitle: true,
               pinned: true,
@@ -37,7 +38,7 @@ class _QRClassState extends State<QRClass> {
                   alignment: Alignment.center,
                   child: QrImage(
                     data:
-                        "${widget.tName}#${widget.subName}#${widget.date}#${widget.time}#${widget.qrNumber.toString()}",
+                        "${widget.tName}#${widget.subName}#${widget.date}#${widget.time}#${widget.qrNumber.toString()}#${widget.stage}#${widget.stageType}",
                     errorStateBuilder: (c, o) {
                       return Text("Errror $o");
                     },

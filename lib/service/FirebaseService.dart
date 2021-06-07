@@ -1,17 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 
 class FirebaseService {
-  Future<FirebaseException> addNewClass({
-    String teacherName,
-    String subName,
-    String date,
-    String time,
-    int qrNumber,
-    String uid,
-    String stage,
-    String type
-  }) async {
+  Future<FirebaseException> addNewClass(
+      {String teacherName,
+      String subName,
+      String date,
+      String time,
+      int qrNumber,
+      String uid,
+      String stage,
+      String type}) async {
     try {
       await FirebaseFirestore.instance
           .collection("class")
@@ -25,6 +25,7 @@ class FirebaseService {
         "time": time,
         "type": type,
         "qrNumber": qrNumber,
+        "stage": stage
       });
       return FirebaseException(message: "Done", code: "Done", plugin: "Done");
     } on FirebaseException catch (e) {
@@ -38,13 +39,14 @@ class FirebaseService {
       String date,
       String time,
       int qrNumber,
-      String email}) async {
+      String email,
+      @required stage}) async {
     try {
       await FirebaseFirestore.instance
           .collection("storedStudents")
           .doc("$date")
           .collection("$qrNumber")
-          .doc()
+          .doc(email)
           .set({
         "studentName": studentName,
         "SubName": subName,
@@ -52,6 +54,7 @@ class FirebaseService {
         "time": time,
         "mark": 0,
         "stdEmail": email,
+        "stage": stage
       });
       return FirebaseException(message: "Done", code: "Done", plugin: "Done");
     } on FirebaseException catch (e) {
@@ -89,6 +92,7 @@ class FirebaseService {
           .set({
         "teacherAdminEmail": teacherAdminName,
         "email": email,
+        "admin": true,
       });
       return FirebaseException(message: "Done", code: "Done", plugin: "Done");
     } on FirebaseException catch (e) {
@@ -99,6 +103,17 @@ class FirebaseService {
   Future<Stream<QuerySnapshot>> getAdminEmail() async {
     return FirebaseFirestore.instance
         .collection("TeacherAdminEmail")
+        .snapshots();
+  }
+
+  Future<Stream<QuerySnapshot>> getAllStudentData({
+    String stage,
+    String stdtype,
+  }) async {
+    return FirebaseFirestore.instance
+        .collection("allStudents")
+        .doc(stage)
+        .collection(stdtype)
         .snapshots();
   }
 
@@ -114,12 +129,14 @@ class FirebaseService {
           .collection("allStudents")
           .doc(stage)
           .collection(stdtype)
-          .doc()
+          .doc(email)
           .set({
         "stdName": stdName,
         "stdEmail": email,
         "pass": pass,
         "stdtype": stdtype,
+        "stage": stage,
+        "admin": false,
       });
       return "Done";
     } on FirebaseException catch (e) {
