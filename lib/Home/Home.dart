@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:student/Home/generateNewLesson.dart';
 import 'package:student/Home/homeWidget.dart';
+import 'package:student/allStudent/allStudent.dart';
 import 'package:student/loginReg/StudentLogin.dart';
 import 'package:student/service/FirebaseService.dart';
 import 'package:student/studentAcountGenerator/studentAcountGenerator.dart';
@@ -158,7 +159,6 @@ class _HomeState extends State<Home> {
     return Scaffold(
       key: scaKey,
       appBar: AppBar(
-        title: Text("المحاضرات"),
         centerTitle: true,
         elevation: 0,
         actions: [
@@ -227,6 +227,8 @@ class _HomeState extends State<Home> {
               homeWidget = HomeWidget(uid: userUid);
             } else if (i == 1) {
               homeWidget = StudentAcountGenerator();
+            } else if (i == 2) {
+              homeWidget = AllStudent();
             }
           });
         },
@@ -254,6 +256,17 @@ class _HomeState extends State<Home> {
             ),
             icon: Icon(CupertinoIcons.add_circled_solid),
             label: "انشاء حسابات",
+            backgroundColor: Colors.white,
+          ),
+          BottomNavigationBarItem(
+            activeIcon: CircleAvatar(
+              child: Icon(
+                CupertinoIcons.add_circled_solid,
+              ),
+              backgroundColor: Colors.white,
+            ),
+            icon: Icon(CupertinoIcons.person_2_alt),
+            label: "الطلاب",
             backgroundColor: Colors.white,
           ),
         ],

@@ -244,6 +244,13 @@ class _StudentDetailsWithExcelState extends State<StudentDetailsWithExcel> {
           print(xx);
           if (xx['isSuccess'] == true) {
             setSnakbar(xx["filePath"]);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    "حدث خطأ اثناء حفظ الملف يرجى منح صلاحية الوصول للملفات قبل الحفظ"),
+              ),
+            );
           }
           //excel.delete(sheetName);
           //  await OpenFile.open(excelFile.path);
